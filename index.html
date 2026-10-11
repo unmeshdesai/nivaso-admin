@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>NIVASO Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F5FAE'/%3E%3Ctext x='16' y='22' font-size='17' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F4F6FA; --panel: #FFFFFF; --ink: #1B2433; --muted: #5F6B7D; --line: #E2E7EF;
+  --brand: #1F5FAE; --brand-soft: #E8F0FB;
+  --ok: #1E7B4F; --ok-soft: #E3F4EB; --warn: #9A5B00; --warn-soft: #FFF4DE;
+  --bad: #B3261E; --bad-soft: #FBE6E6; --info: #5B3FB0; --info-soft: #EFEAFB;
+  --shadow: 0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F141C; --panel: #171E29; --ink: #E6EAF0; --muted: #98A3B4; --line: #2A3342;
+    --brand: #6EA6EE; --brand-soft: #1B2B42;
+    --ok: #5FC995; --ok-soft: #15301F; --warn: #F0B65A; --warn-soft: #36290F;
+    --bad: #F2867E; --bad-soft: #3A1A18; --info: #B7A2F2; --info-soft: #2A2240;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F141C; --panel: #171E29; --ink: #E6EAF0; --muted: #98A3B4; --line: #2A3342;
+  --brand: #6EA6EE; --brand-soft: #1B2B42;
+  --ok: #5FC995; --ok-soft: #15301F; --warn: #F0B65A; --warn-soft: #36290F;
+  --bad: #F2867E; --bad-soft: #3A1A18; --info: #B7A2F2; --info-soft: #2A2240;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 Inter, "Segoe UI", system-ui, sans-serif; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.hidden { display: none !important; }
+
+/* login */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
+.login .card { width: 100%; max-width: 380px; padding: 28px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+.logo i { width: 32px; height: 32px; border-radius: 8px; background: var(--brand); color: #fff;
+  display: grid; place-items: center; font-style: normal; }
+.login p { color: var(--muted); margin: 6px 0 20px; }
+label { display: block; font-weight: 600; font-size: 13px; margin: 12px 0 5px; }
+input, select, textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel); outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px;
+  border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; }
+.btn:hover { border-color: var(--brand); }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .55; cursor: default; }
+.btn.block { width: 100%; margin-top: 18px; }
+.err { color: var(--bad); font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+/* app */
+header { background: var(--panel); border-bottom: 1px solid var(--line); }
+.bar { max-width: 1280px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+.bar .grow { flex: 1; }
+.who { color: var(--muted); font-size: 13px; }
+main { max-width: 1280px; margin: 0 auto; padding: 18px 16px 40px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.kpi { padding: 14px 16px; cursor: pointer; text-align: left; border: 1px solid var(--line); }
+.kpi:hover, .kpi.on { border-color: var(--brand); }
+.kpi.on { box-shadow: 0 0 0 3px var(--brand-soft); }
+.kpi b { display: block; font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+.kpi span { color: var(--muted); font-size: 12.5px; font-weight: 500; }
+.tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 18px 0 10px; }
+.tools input[type=search] { max-width: 320px; }
+.check { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer; }
+.check input { width: auto; }
+.updated { color: var(--muted); font-size: 12.5px; margin-left: auto; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 860px; }
+th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); font-weight: 600;
+  background: var(--panel); position: sticky; top: 0; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--brand-soft); }
+tbody tr:last-child td { border-bottom: 0; }
+td.soc b { display: block; }
+td.soc small { color: var(--muted); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.pill.trial { background: var(--info-soft); color: var(--info); }
+.pill.licensed { background: var(--ok-soft); color: var(--ok); }
+.pill.expiring { background: var(--warn-soft); color: var(--warn); }
+.pill.expired { background: var(--bad-soft); color: var(--bad); }
+.pill.test { background: var(--line); color: var(--muted); margin-left: 6px; }
+.empty { padding: 40px; text-align: center; color: var(--muted); }
+
+/* side panel */
+.shade { position: fixed; inset: 0; background: rgba(10,15,25,.35); }
+.panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100%); background: var(--panel);
+  border-left: 1px solid var(--line); overflow-y: auto; padding: 20px; }
+.panel h2 { margin: 0 0 2px; font-size: 19px; }
+.panel .sub { color: var(--muted); margin-bottom: 14px; }
+.panel h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 22px 0 8px; }
+dl { display: grid; grid-template-columns: 140px 1fr; gap: 6px 12px; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; word-break: break-word; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.note { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.ok-msg { background: var(--ok-soft); color: var(--ok); padding: 10px 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; }
+.keybox { font-family: Consolas, monospace; font-size: 12px; word-break: break-all; background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-top: 6px; }
+.lic { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
+.lic .top { display: flex; justify-content: space-between; gap: 8px; }
+.x { position: absolute; top: 14px; right: 14px; }
+@media (max-width: 560px) { dl { grid-template-columns: 1fr; } dt { margin-top: 6px; } .row2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<section id="login" class="login hidden">
+  <form class="card" id="loginForm">
+    <div class="logo"><i>N</i> NIVASO Admin</div>
+    <p>Sign in to see every society using NIVASO.</p>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button class="btn primary block" id="loginBtn">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</section>
+
+<section id="app" class="hidden">
+  <header><div class="bar">
+    <div class="logo"><i>N</i> NIVASO Admin</div>
+    <div class="grow"></div>
+    <span class="who" id="who"></span>
+    <button class="btn" id="refreshBtn" title="Reload the list">Refresh</button>
+    <button class="btn" id="logoutBtn">Sign out</button>
+  </div></header>
+  <main>
+    <div class="kpis" id="kpis"></div>
+    <div class="tools">
+      <input type="search" id="search" placeholder="Search society, address, email or ID">
+      <label class="check"><input type="checkbox" id="showTest"> Show test copies (preview)</label>
+      <span class="updated" id="updated"></span>
+    </div>
+    <div class="card tablewrap">
+      <table>
+        <thead><tr>
+          <th>Society</th><th>Status</th><th>Ends on</th><th class="num">Days left</th>
+          <th>Version</th><th>Last seen</th><th>First seen</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty hidden" id="empty">No societies match.</div>
+    </div>
+  </main>
+</section>
+
+<div id="drawer" class="hidden">
+  <div class="shade" id="shade"></div>
+  <aside class="panel" id="panel"></aside>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const sb = supabase.createClient(NIVASO.url, NIVASO.anonKey);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DAY = 86400000;
+let all = [], filter = "all", openId = null;
+
+function today() { const d = new Date(); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()); }
+function dayMs(iso) { return iso ? Date.parse(iso + "T00:00:00Z") : null; }
+function fmtDate(iso) { if (!iso) return "—"; const [y, m, d] = iso.slice(0, 10).split("-"); return `${d}-${m}-${y}`; }
+function ago(ts) {
+  const s = (Date.now() - Date.parse(ts)) / 1000;
+  if (s < 90) return "just now";
+  if (s < 3600) return Math.round(s / 60) + " min ago";
+  if (s < 86400) return Math.round(s / 3600) + " h ago";
+  const d = Math.round(s / 86400);
+  return d === 1 ? "yesterday" : d + " days ago";
+}
+
+// Status from the dates (not from what the app last said), so it stays right
+// even when a society hasn't opened NIVASO for a while.
+function statusOf(r) {
+  const t = today();
+  const lic = dayMs(r.licence_expires), trial = dayMs(r.trial_end);
+  if (lic !== null) {
+    const left = Math.round((lic - t) / DAY) + 1;
+    if (left > 0) return { key: left <= 30 ? "expiring" : "licensed", label: "Licensed", ends: r.licence_expires, left };
+    return { key: "expired", label: "Licence expired", ends: r.licence_expires, left: 0 };
+  }
+  if (trial !== null) {
+    const left = Math.round((trial - t) / DAY) + 1;
+    if (left > 0) return { key: left <= 7 ? "expiring" : "trial", label: "Trial", ends: r.trial_end, left, trial: true };
+    return { key: "expired", label: "Trial ended", ends: r.trial_end, left: 0 };
+  }
+  return { key: "trial", label: "Unknown", ends: null, left: null };
+}
+
+const KPIS = [
+  ["all", "Societies", () => true],
+  ["active7", "Active in last 7 days", (r) => Date.now() - Date.parse(r.last_seen) < 7 * DAY],
+  ["trial", "In free trial", (r, s) => s.label === "Trial"],
+  ["licensed", "Licensed", (r, s) => s.label === "Licensed"],
+  ["expiring", "Ending soon", (r, s) => s.key === "expiring"],
+  ["expired", "Expired / view-only", (r, s) => s.key === "expired"],
+];
+
+function visible() { return all.filter((r) => $("showTest").checked || r.channel !== "preview"); }
+
+function render() {
+  const base = visible().map((r) => ({ r, s: statusOf(r) }));
+  $("kpis").innerHTML = KPIS.map(([k, label, fn]) =>
+    `<button class="card kpi ${filter === k ? "on" : ""}" data-k="${k}"><b>${base.filter((x) => fn(x.r, x.s)).length}</b><span>${label}</span></button>`
+  ).join("");
+  const q = $("search").value.trim().toLowerCase();
+  const fn = KPIS.find((k) => k[0] === filter)[2];
+  const list = base.filter((x) => fn(x.r, x.s)).filter(({ r }) => !q ||
+    [r.society_name, r.society_address, r.society_email, r.install_id, r.licence_id].join(" ").toLowerCase().includes(q))
+    .sort((a, b) => Date.parse(b.r.last_seen) - Date.parse(a.r.last_seen));
+  $("rows").innerHTML = list.map(({ r, s }) => `
+    <tr data-id="${r.install_id}">
+      <td class="soc"><b>${esc(r.society_name || "(name not set yet)")}${r.channel === "preview" ? '<span class="pill test">test</span>' : ""}</b>
+        <small>${esc((r.society_address || "").split(/\n/)[0].slice(0, 60))}</small></td>
+      <td><span class="pill ${s.key}">${s.label}${s.key === "expiring" ? " · ending" : ""}</span>${r.pending_licence ? ' <span class="pill test">key waiting</span>' : ""}</td>
+      <td>${fmtDate(s.ends)}</td>
+      <td class="num">${s.left ?? "—"}</td>
+      <td>${esc(r.app_version)}</td>
+      <td>${ago(r.last_seen)}</td>
+      <td>${fmtDate(r.first_seen)}</td>
+    </tr>`).join("");
+  $("empty").classList.toggle("hidden", list.length > 0);
+  if (openId) openPanel(openId, true);
+}
+
+async function load() {
+  $("refreshBtn").disabled = true;
+  const { data, error } = await sb.from("installations").select("install_id,society_name,society_address,society_email,app_version,channel,status,trial_start,trial_end,licence_id,licence_expires,pending_licence,notes,first_seen,last_seen,checkins").order("last_seen", { ascending: false });
+  $("refreshBtn").disabled = false;
+  if (error) { $("updated").textContent = "Could not load: " + error.message; return; }
+  all = data;
+  $("updated").textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  render();
+}
+
+async function openPanel(id, keepForm) {
+  const r = all.find((x) => x.install_id === id);
+  if (!r) return;
+  if (keepForm && $("panel").dataset.id === id) return;
+  openId = id;
+  const s = statusOf(r);
+  const t = today();
+  const lic = dayMs(r.licence_expires);
+  const start = new Date(lic && lic >= t ? lic + DAY : t).toISOString().slice(0, 10);
+  $("panel").dataset.id = id;
+  $("panel").innerHTML = `
+    <button class="btn x" id="closeBtn">Close</button>
+    <h2>${esc(r.society_name || "(name not set yet)")}</h2>
+    <div class="sub"><span class="pill ${s.key}">${s.label}</span> ${s.ends ? "ends " + fmtDate(s.ends) : ""}</div>
+    <dl>
+      <dt>Address</dt><dd>${esc(r.society_address) || "—"}</dd>
+      <dt>Email</dt><dd>${r.society_email ? `<a href="mailto:${esc(r.society_email)}">${esc(r.society_email)}</a>` : "—"}</dd>
+      <dt>Installation ID</dt><dd><code>${esc(r.install_id.toUpperCase())}</code></dd>
+      <dt>Free trial</dt><dd>${fmtDate(r.trial_start)} to ${fmtDate(r.trial_end)}</dd>
+      <dt>Licence</dt><dd>${r.licence_id ? `${esc(r.licence_id)} · until ${fmtDate(r.licence_expires)}` : "None"}</dd>
+      <dt>App version</dt><dd>${esc(r.app_version)}${r.channel === "preview" ? " (test copy)" : ""}</dd>
+      <dt>Last seen</dt><dd>${ago(r.last_seen)} · ${r.checkins} check-ins</dd>
+      <dt>First seen</dt><dd>${fmtDate(r.first_seen)}</dd>
+    </dl>
+
+    <h3>Issue / renew licence</h3>
+    <div class="row2">
+      <div><label for="years">Years</label>
+        <select id="years"><option value="1">1 year</option><option value="2">2 years</option><option value="3">3 years</option></select></div>
+      <div><label for="starts">Starts on</label><input type="date" id="starts" value="${start}"></div>
+    </div>
+    <button class="btn primary block" id="issueBtn">Issue licence</button>
+    <div class="note">The society's NIVASO picks the licence up by itself the next time it is open and online.
+      You can also send them the key to paste in <b>Enter Licence Key</b>.</div>
+    <div id="issueOut">${r.pending_licence ? `<div class="ok-msg">A key is waiting to be picked up:</div><div class="keybox">${esc(r.pending_licence)}</div>` : ""}</div>
+
+    <h3>Notes</h3>
+    <textarea id="notes" rows="3" placeholder="Only you can see these">${esc(r.notes)}</textarea>
+    <button class="btn" id="notesBtn" style="margin-top:8px">Save notes</button> <span class="note" id="notesOut"></span>
+
+    <h3>Licence history</h3>
+    <div id="history" class="note">Loading…</div>`;
+  $("drawer").classList.remove("hidden");
+  $("closeBtn").onclick = closePanel;
+  $("issueBtn").onclick = () => issue(r);
+  $("notesBtn").onclick = () => saveNotes(r);
+  const { data } = await sb.from("licences").select("*").eq("install_id", id).order("issued_at", { ascending: false });
+  if (openId !== id) return;
+  $("history").innerHTML = (data || []).length ? data.map((l) => `
+    <div class="lic"><div class="top"><b>${esc(l.licence_id)}</b><span>${l.delivered_at ? "Activated" : "Waiting"}</span></div>
+      ${fmtDate(l.starts)} to ${fmtDate(l.expires)} · issued ${fmtDate(l.issued_at)}
+      <div class="keybox">${esc(l.licence_key)}</div></div>`).join("") : "No licences issued yet.";
+}
+
+function closePanel() { openId = null; $("panel").dataset.id = ""; $("drawer").classList.add("hidden"); }
+
+async function issue(r) {
+  const years = Number($("years").value), starts = $("starts").value;
+  if (!confirm(`Issue a ${years}-year licence to ${r.society_name || "this installation"}, starting ${fmtDate(starts)}?`)) return;
+  $("issueBtn").disabled = true;
+  const { data, error } = await sb.functions.invoke("issue-licence", { body: { install_id: r.install_id, years, starts } });
+  $("issueBtn").disabled = false;
+  let msg = error ? error.message : null;
+  if (error && error.context) { try { msg = (await error.context.json()).error || msg; } catch (_) {} }
+  if (msg) { $("issueOut").innerHTML = `<div class="err">${esc(msg)}</div>`; return; }
+  $("panel").dataset.id = "";
+  await load();
+  await openPanel(r.install_id);
+  $("issueOut").innerHTML = `<div class="ok-msg">Licence ${esc(data.licence_id)} issued, valid ${fmtDate(data.starts)} to ${fmtDate(data.expires)}.</div><div class="keybox">${esc(data.licence_key)}</div>`;
+}
+
+async function saveNotes(r) {
+  const notes = $("notes").value;
+  const { error } = await sb.from("installations").update({ notes }).eq("install_id", r.install_id);
+  $("notesOut").textContent = error ? "Not saved: " + error.message : "Saved.";
+  if (!error) r.notes = notes;
+}
+
+async function show(session) {
+  $("login").classList.toggle("hidden", !!session);
+  $("app").classList.toggle("hidden", !session);
+  if (!session) return;
+  $("who").textContent = session.user.email;
+  const { data: ok } = await sb.rpc("is_admin");
+  if (ok !== true) {
+    await sb.auth.signOut();
+    $("loginErr").textContent = "This account is not an administrator.";
+    return;
+  }
+  load();
+}
+
+$("loginForm").onsubmit = async (e) => {
+  e.preventDefault();
+  $("loginBtn").disabled = true; $("loginErr").textContent = "";
+  const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
+  $("loginBtn").disabled = false;
+  if (error) $("loginErr").textContent = error.message === "Invalid login credentials" ? "Wrong email or password." : error.message;
+};
+$("logoutBtn").onclick = () => sb.auth.signOut();
+$("refreshBtn").onclick = load;
+$("search").oninput = render;
+$("showTest").onchange = render;
+$("kpis").onclick = (e) => { const b = e.target.closest(".kpi"); if (b) { filter = b.dataset.k; render(); } };
+$("rows").onclick = (e) => { const tr = e.target.closest("tr"); if (tr) openPanel(tr.dataset.id); };
+$("shade").onclick = closePanel;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
+setInterval(() => { if (!$("app").classList.contains("hidden") && !openId) load(); }, 60000);
+
+sb.auth.getSession().then(({ data }) => show(data.session));
+sb.auth.onAuthStateChange((evt, session) => { if (evt === "SIGNED_IN" || evt === "SIGNED_OUT") show(session); });
+</script>
+</body>
+</html>
