@@ -113,6 +113,11 @@ dd { margin: 0; word-break: break-word; }
 .lic { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
 .lic .top { display: flex; justify-content: space-between; gap: 8px; }
 .x { position: absolute; top: 14px; right: 14px; }
+.bk { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 10px; margin-bottom: 6px; font-size: 13px; flex-wrap: wrap; }
+.bk .grow { flex: 1; min-width: 160px; }
+.bk .btn { padding: 5px 10px; font-size: 12.5px; }
+.stale { color: var(--warn); }
 @media (max-width: 560px) { dl { grid-template-columns: 1fr; } dt { margin-top: 6px; } .row2 { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -150,7 +155,7 @@ dd { margin: 0; word-break: break-word; }
       <table>
         <thead><tr>
           <th>Society</th><th>Status</th><th>Ends on</th><th class="num">Days left</th>
-          <th>Version</th><th>Last seen</th><th>First seen</th>
+          <th>Version</th><th>Last seen</th><th>Cloud backup</th><th>First seen</th>
         </tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -171,7 +176,7 @@ const sb = supabase.createClient(NIVASO.url, NIVASO.anonKey);
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const DAY = 86400000;
-let all = [], filter = "all", openId = null;
+let all = [], filter = "all", openId = null, lastBackup = {};
 
 function today() { const d = new Date(); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()); }
 function dayMs(iso) { return iso ? Date.parse(iso + "T00:00:00Z") : null; }
@@ -233,10 +238,24 @@ function render() {
       <td class="num">${s.left ?? "—"}</td>
       <td>${esc(r.app_version)}</td>
       <td>${ago(r.last_seen)}</td>
+      <td>${backupCell(r.install_id)}</td>
       <td>${fmtDate(r.first_seen)}</td>
     </tr>`).join("");
   $("empty").classList.toggle("hidden", list.length > 0);
   if (openId) openPanel(openId, true);
+}
+
+// newest cloud backup per installation; older than 8 days = stale (weekly)
+function backupCell(id) {
+  const ts = lastBackup[id];
+  if (!ts) return '<span class="stale">none yet</span>';
+  return Date.now() - Date.parse(ts) > 8 * DAY ? `<span class="stale">${ago(ts)}</span>` : ago(ts);
+}
+
+async function loadBackups() {
+  const { data } = await sb.from("cloud_backups").select("install_id,created_at").order("created_at", { ascending: false });
+  lastBackup = {};
+  for (const b of data || []) if (!lastBackup[b.install_id]) lastBackup[b.install_id] = b.created_at;
 }
 
 async function load() {
@@ -245,6 +264,7 @@ async function load() {
   $("refreshBtn").disabled = false;
   if (error) { $("updated").textContent = "Could not load: " + error.message; return; }
   all = data;
+  await loadBackups();
   $("updated").textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   render();
 }
@@ -289,18 +309,55 @@ async function openPanel(id, keepForm) {
     <textarea id="notes" rows="3" placeholder="Only you can see these">${esc(r.notes)}</textarea>
     <button class="btn" id="notesBtn" style="margin-top:8px">Save notes</button> <span class="note" id="notesOut"></span>
 
+    <h3>Cloud backups</h3>
+    <div id="backups" class="note">Loading…</div>
+    <div class="note">One a week, the last 8 kept. To restore on a new computer, click
+      <b>Restore code</b> and send the code to the society: they enter it in
+      Settings &gt; Backup &amp; Restore &gt; <b>Restore from Cloud</b> (valid 7 days, once).</div>
+
     <h3>Licence history</h3>
     <div id="history" class="note">Loading…</div>`;
   $("drawer").classList.remove("hidden");
   $("closeBtn").onclick = closePanel;
   $("issueBtn").onclick = () => issue(r);
   $("notesBtn").onclick = () => saveNotes(r);
+  showBackups(id);
   const { data } = await sb.from("licences").select("*").eq("install_id", id).order("issued_at", { ascending: false });
   if (openId !== id) return;
   $("history").innerHTML = (data || []).length ? data.map((l) => `
     <div class="lic"><div class="top"><b>${esc(l.licence_id)}</b><span>${l.delivered_at ? "Activated" : "Waiting"}</span></div>
       ${fmtDate(l.starts)} to ${fmtDate(l.expires)} · issued ${fmtDate(l.issued_at)}
       <div class="keybox">${esc(l.licence_key)}</div></div>`).join("") : "No licences issued yet.";
+}
+
+async function showBackups(id) {
+  const { data, error } = await sb.from("cloud_backups").select("id,path,created_at,size,app_version")
+    .eq("install_id", id).order("created_at", { ascending: false });
+  if (openId !== id) return;
+  if (error) { $("backups").innerHTML = `<div class="err">${esc(error.message)}</div>`; return; }
+  const mb = (n) => (n / 1048576).toFixed(1) + " MB";
+  $("backups").innerHTML = (data || []).length ? data.map((b) => `
+    <div class="bk" data-id="${b.id}" data-path="${esc(b.path)}">
+      <span class="grow"><b>${fmtDate(b.created_at)}</b> ${new Date(b.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+        · ${mb(b.size)} · v${esc(b.app_version)}</span>
+      <button class="btn dl">Download</button><button class="btn code">Restore code</button>
+      <div class="out" style="flex-basis:100%"></div>
+    </div>`).join("") : "No cloud backups yet. The app sends its first one when it next opens online (version 1.0.13 or later).";
+  $("backups").onclick = async (e) => {
+    const row = e.target.closest(".bk"); if (!row) return;
+    const out = row.querySelector(".out");
+    if (e.target.classList.contains("dl")) {
+      const { data: s, error: er } = await sb.storage.from("backups").createSignedUrl(row.dataset.path, 300, { download: true });
+      if (er) { out.innerHTML = `<div class="err">${esc(er.message)}</div>`; return; }
+      location.href = s.signedUrl;
+    } else if (e.target.classList.contains("code")) {
+      e.target.disabled = true;
+      const { data: c, error: er } = await sb.rpc("make_restore_code", { p_backup_id: Number(row.dataset.id) });
+      e.target.disabled = false;
+      out.innerHTML = er ? `<div class="err">${esc(er.message)}</div>`
+        : `<div class="ok-msg">Restore code (valid 7 days, works once):</div><div class="keybox" style="font-size:16px">${esc(c)}</div>`;
+    }
+  };
 }
 
 function closePanel() { openId = null; $("panel").dataset.id = ""; $("drawer").classList.add("hidden"); }
