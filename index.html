@@ -260,7 +260,7 @@ async function loadBackups() {
 
 async function load() {
   $("refreshBtn").disabled = true;
-  const { data, error } = await sb.from("installations").select("install_id,society_name,society_address,society_email,app_version,channel,status,trial_start,trial_end,licence_id,licence_expires,pending_licence,notes,first_seen,last_seen,checkins").order("last_seen", { ascending: false });
+  const { data, error } = await sb.from("installations").select("install_id,society_name,society_address,society_email,app_version,channel,status,trial_start,trial_end,licence_id,licence_expires,pending_licence,app_message,notes,first_seen,last_seen,checkins").order("last_seen", { ascending: false });
   $("refreshBtn").disabled = false;
   if (error) { $("updated").textContent = "Could not load: " + error.message; return; }
   all = data;
@@ -292,6 +292,7 @@ async function openPanel(id, keepForm) {
       <dt>App version</dt><dd>${esc(r.app_version)}${r.channel === "preview" ? " (test copy)" : ""}</dd>
       <dt>Last seen</dt><dd>${ago(r.last_seen)} · ${r.checkins} check-ins</dd>
       <dt>First seen</dt><dd>${fmtDate(r.first_seen)}</dd>
+      ${r.app_message ? `<dt>App reports</dt><dd><div class="err">${esc(r.app_message)}</div></dd>` : ""}
     </dl>
 
     <h3>Issue / renew licence</h3>
@@ -316,11 +317,17 @@ async function openPanel(id, keepForm) {
       Settings &gt; Backup &amp; Restore &gt; <b>Restore from Cloud</b> (valid 7 days, once).</div>
 
     <h3>Licence history</h3>
-    <div id="history" class="note">Loading…</div>`;
+    <div id="history" class="note">Loading…</div>
+
+    <h3>Connection</h3>
+    <button class="btn" id="resetBtn">Reset secret</button> <span class="note" id="resetOut"></span>
+    <div class="note">Only when this society's NIVASO says the cloud does not recognise it (for
+      example after moving to a new PC). Its next check-in takes this entry back.</div>`;
   $("drawer").classList.remove("hidden");
   $("closeBtn").onclick = closePanel;
   $("issueBtn").onclick = () => issue(r);
   $("notesBtn").onclick = () => saveNotes(r);
+  $("resetBtn").onclick = () => resetSecret(r);
   showBackups(id);
   const { data } = await sb.from("licences").select("*").eq("install_id", id).order("issued_at", { ascending: false });
   if (openId !== id) return;
@@ -382,6 +389,12 @@ async function saveNotes(r) {
   const { error } = await sb.from("installations").update({ notes }).eq("install_id", r.install_id);
   $("notesOut").textContent = error ? "Not saved: " + error.message : "Saved.";
   if (!error) r.notes = notes;
+}
+
+async function resetSecret(r) {
+  if (!confirm(`Reset the secret of ${r.society_name || "this installation"}? The next NIVASO that checks in with this installation ID takes the entry over.`)) return;
+  const { error } = await sb.rpc("admin_reset_secret", { p_install_id: r.install_id });
+  $("resetOut").textContent = error ? "Not reset: " + error.message : "Reset - it reconnects at its next check-in.";
 }
 
 async function show(session) {
